@@ -1,0 +1,16 @@
+# Build artifacts
+build/
+*.o
+*.out
+
+# C-specific
+*.exe
+*.dll
+*.so
+
+# Editor/OS specific
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
