@@ -12,6 +12,14 @@
 #ifndef CODEGEN_H
 #define CODEGEN_H
 
-// მომავალში აქ დაემატება კოდის გენერატორის ფუნქციების დეკლარაციები
+#include "ast.h"
+#include <stdio.h> // FILE* ტიპისთვის
+
+/**
+ * @brief გენერირებულ C კოდს წერს მითითებულ ფაილში.
+ * @param node დასამუშავებელი AST ხის ფესვი.
+ * @param outfile ფაილი, რომელშიც ჩაიწერება C კოდი.
+ */
+void generate_code(AstNode* node, FILE* outfile);
 
 #endif // CODEGEN_H

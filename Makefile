@@ -53,7 +53,7 @@ clean:
 
 # მაგალითის გაშვება
 run: all
-	@echo "Running example 'გამარჯობა.მს'..."
-	./$(TARGET) $(EXAMPLES_DIR)/გამარჯობა.მს
+	@echo "Running example 'ცვლადები.მს'..."
+	./$(TARGET) $(EXAMPLES_DIR)/ცვლადები.მს
 
 .PHONY: all clean run

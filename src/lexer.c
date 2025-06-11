@@ -2,24 +2,26 @@
  * @file lexer.c
  * @author გიორგი მაღრაძე (magradze.giorgi@gmail.com)
  * @brief ლექსიკური ანალიზატორის (ლექსერის) იმპლემენტაცია.
- * @version 0.5
+ * @version 0.6
  * @date 2024-05-21
- *
- * @copyright Copyright (c) 2024
- * Website: https://magradze.dev
- * GitHub: https://github.com/magradze
  */
-
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "lexer.h"
 
 // --- დამხმარე ფუნქციები ---
 
+/**
+ * @brief ამოწმებს, მივაღწიეთ თუ არა საწყისი კოდის ბოლოს.
+ */
 static bool is_at_end(Lexer* lexer) {
     return *lexer->current == '\0';
 }
 
+/**
+ * @brief ქმნის ტოკენს მითითებული ტიპით.
+ */
 static Token make_token(Lexer* lexer, TokenType type) {
     Token token;
     token.type = type;
@@ -29,6 +31,9 @@ static Token make_token(Lexer* lexer, TokenType type) {
     return token;
 }
 
+/**
+ * @brief ქმნის ვირტუალურ (უტექსტო) ტოკენს, როგორიცაა INDENT/DEDENT.
+ */
 static Token make_virtual_token(Lexer* lexer, TokenType type) {
     Token token;
     token.type = type;
@@ -38,6 +43,9 @@ static Token make_virtual_token(Lexer* lexer, TokenType type) {
     return token;
 }
 
+/**
+ * @brief ქმნის შეცდომის ტოკენს მითითებული შეტყობინებით.
+ */
 static Token error_token(Lexer* lexer, const char* message) {
     Token token;
     token.type = TOKEN_ERROR;
@@ -47,11 +55,17 @@ static Token error_token(Lexer* lexer, const char* message) {
     return token;
 }
 
+/**
+ * @brief გადააქვს ლექსერის მიმდინარე პოზიცია ერთით წინ და აბრუნებს წინა სიმბოლოს.
+ */
 static char advance(Lexer* lexer) {
     lexer->current++;
     return lexer->current[-1];
 }
 
+/**
+ * @brief ამოწმებს, ემთხვევა თუ არა მიმდინარე სიმბოლო მოსალოდნელს.
+ */
 static bool match(Lexer* lexer, char expected) {
     if (is_at_end(lexer)) return false;
     if (*lexer->current != expected) return false;
@@ -59,10 +73,16 @@ static bool match(Lexer* lexer, char expected) {
     return true;
 }
 
+/**
+ * @brief აბრუნებს მიმდინარე სიმბოლოს პოზიციის გადატანის გარეშე.
+ */
 static char peek(Lexer* lexer) {
     return *lexer->current;
 }
 
+/**
+ * @brief გამოტოვებს ცარიელ ადგილებს (space, tab, carriage return).
+ */
 static void skip_whitespace(Lexer* lexer) {
     while (true) {
         char c = peek(lexer);
@@ -78,14 +98,23 @@ static void skip_whitespace(Lexer* lexer) {
     }
 }
 
+/**
+ * @brief ამოწმებს, არის თუ არა სიმბოლო ციფრი.
+ */
 static bool is_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
+/**
+ * @brief ამოწმებს, არის თუ არა სიმბოლო ასო (ASCII) ან ქვედატირე.
+ */
 static bool is_alpha(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
+/**
+ * @brief სკანირებს რიცხვით ლიტერალს.
+ */
 static Token number(Lexer* lexer) {
     while (is_digit(peek(lexer))) advance(lexer);
     if (peek(lexer) == '.' && is_digit(lexer->current[1])) {
@@ -95,6 +124,9 @@ static Token number(Lexer* lexer) {
     return make_token(lexer, TOKEN_NUMBER);
 }
 
+/**
+ * @brief სკანირებს სტრიქონულ ლიტერალს.
+ */
 static Token string(Lexer* lexer) {
     while (peek(lexer) != '"' && !is_at_end(lexer)) {
         if (peek(lexer) == '\n') lexer->line++;
@@ -107,19 +139,26 @@ static Token string(Lexer* lexer) {
     return make_token(lexer, TOKEN_STRING);
 }
 
+/**
+ * @brief განსაზღვრავს იდენტიფიკატორის ტიპს (საკვანძო სიტყვაა თუ უბრალო იდენტიფიკატორი).
+ */
 static TokenType identifier_type(Lexer* lexer) {
     const char* str = lexer->start;
     int len = lexer->current - lexer->start;
 
+    // შესწორებული და სწორი სიგრძეები ბაიტებში
     if (len == 6 && strncmp(str, "თუ", 6) == 0) return TOKEN_თუ;
     if (len == 12 && strncmp(str, "სხვა", 12) == 0) return TOKEN_სხვა;
-    if (len == 15 && strncmp(str, "ფუნქცია", 15) == 0) return TOKEN_ფუნქცია;
-    if (len == 15 && strncmp(str, "ცვლადი", 15) == 0) return TOKEN_ცვლადი;
-    if (len == 18 && strncmp(str, "დაბეჭდე", 18) == 0) return TOKEN_დაბეჭდე;
+    if (len == 21 && strncmp(str, "ფუნქცია", 21) == 0) return TOKEN_ფუნქცია;
+    if (len == 18 && strncmp(str, "ცვლადი", 18) == 0) return TOKEN_ცვლადი;
+    if (len == 21 && strncmp(str, "დაბეჭდე", 21) == 0) return TOKEN_დაბეჭდე;
 
     return TOKEN_IDENTIFIER;
 }
 
+/**
+ * @brief სკანირებს იდენტიფიკატორს.
+ */
 static Token identifier(Lexer* lexer) {
     while (is_alpha(peek(lexer)) || is_digit(peek(lexer)) || (unsigned char)peek(lexer) > 127) {
         advance(lexer);
@@ -147,17 +186,15 @@ Token scan_token(Lexer* lexer) {
         }
 
         if (lexer->at_start_of_line) {
-            // თუ ხაზი კომენტარს შეიცავს ან ცარიელია, სრულად გამოვტოვოთ
             if (peek(lexer) == '#' || peek(lexer) == '\n' || peek(lexer) == '\r') {
                 while (!is_at_end(lexer) && peek(lexer) != '\n') {
                     advance(lexer);
                 }
-                // გამოვტოვოთ თვითონ '\n' სიმბოლოც, რომ შემდეგ ხაზზე გადავიდეთ
                 if (!is_at_end(lexer)) {
                     advance(lexer);
                     lexer->line++;
                 }
-                continue; // დავბრუნდეთ ციკლის დასაწყისში შემდეგი ხაზისთვის
+                continue;
             }
 
             int current_indent = 0;
@@ -187,7 +224,7 @@ Token scan_token(Lexer* lexer) {
                 return make_virtual_token(lexer, TOKEN_DEDENT);
             }
         }
-        break; // გამოვიდეთ ციკლიდან, როცა რეალური ტოკენის წაკითხვა გვინდა
+        break;
     }
 
     skip_whitespace(lexer);
